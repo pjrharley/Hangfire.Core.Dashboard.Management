@@ -24,7 +24,7 @@ namespace Hangfire.Core.Dashboard.Management
             {
                 ManagementBasePage.AddCommands(pageInfo.Queue);
 
-                ManagementSidebarMenu.Items.Add(p => new MenuItem(pageInfo.MenuName, $"{ManagementPage.UrlRoute}/{pageInfo.Queue}")
+                ManagementSidebarMenu.Items.Add(p => new MenuItem(pageInfo.MenuName, p.Url.To($"{ManagementPage.UrlRoute}/{pageInfo.Queue}"))
                 {
                     Active = p.RequestPath.StartsWith($"{ManagementPage.UrlRoute}/{pageInfo.Queue}")
                 });

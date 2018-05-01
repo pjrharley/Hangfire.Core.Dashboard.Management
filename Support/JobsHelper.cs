@@ -17,7 +17,7 @@ namespace Hangfire.Core.Dashboard.Management.Support
             Metadata = new List<JobMetadata>();
             Pages = new List<ManagementPageAttribute>();
 
-            foreach (Type ti in  assembly.GetTypes().Where(x => x.IsInterface && typeof(IJob).IsAssignableFrom(x) && x.Name != (typeof(IJob).Name)))
+            foreach (Type ti in  assembly.GetTypes().Where(x => !x.IsInterface && typeof(IJob).IsAssignableFrom(x) && x.Name != (typeof(IJob).Name)))
             {
                 var q="default";
 
@@ -29,7 +29,7 @@ namespace Hangfire.Core.Dashboard.Management.Support
                 }
                 
 
-                foreach (var methodInfo in ti.GetMethods())
+                foreach (var methodInfo in ti.GetMethods().Where(m => m.DeclaringType == ti))
                 {
                     var meta = new JobMetadata { Type = ti, Queue = q};
 
