@@ -17,7 +17,13 @@
                        var id = $this.attr("input-id");
                        var send = {};
                        $("input[id^='" + id + "']", container).each(function() {
-                           send[$(this).attr('id')] = $(this).val();
+                           if ($(this).is('[type=checkbox]')) {
+                            if ($(this).is(':checked')) {
+                              send[$(this).attr('id')] = "on";
+                            }
+                           } else {
+                            send[$(this).attr('id')] = $(this).val();
+                           }
                        });
 
                        $("div[id^='" + id + "']", container).each(function () {
