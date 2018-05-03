@@ -37,15 +37,15 @@
 
                        if (!confirmText || confirm(confirmText)) {
                            $this.prop('disabled');
-                           var loadingDelay = setTimeout(function () {
-                               $this.button('loading');
-                           }, 100);
+                           $this.button('loading');
                            
-                           $.post($this.data('url'), send, function () {
-                               clearTimeout(loadingDelay);
-                               window.location.reload();
+                           $.post($this.data('url'), send, function (data) {
+                               Hangfire.Management.alertSuccess(id, "A Task has been created. <a href=\"" + data.jobLink + "\">View Job</a>");
                            }).fail(function (xhr, status, error) {
-                               Hangfire.Management.alert(id,"There was an error. " + error);
+                               Hangfire.Management.alertError(id,"There was an error. " + error);
+                           }).always(function() {
+                               $this.removeProp('disabled');
+                               $this.button('reset');
                            });
                        }
 
@@ -54,7 +54,14 @@
             });
         };
 
-        Management.alert = function(id, message) {
+        Management.alertSuccess = function(id, message) {
+            $('#' + id + '_success')
+                .html('<div class="alert alert-success"><a class="close" data-dismiss="alert">×</a><strong>Task Created! </strong><span>' +
+                    message +
+                    '</span></div>');
+        }
+
+        Management.alertError = function(id, message) {
             $('#' + id + '_error')
                 .html('<div class="alert alert-danger"><a class="close" data-dismiss="alert">×</a><strong>Error! </strong><span>' +
                     message +

@@ -28,6 +28,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Release\Hangfire.Core.Dashboard.Management.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Hangfire.Core, Version=1.6.8.0, Culture=neutral, processorArchitecture=MSIL">
@@ -53,6 +54,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="GlobalConfigurationExtension.cs" />
+    <Compile Include="Support\CommandWithResponseDispatcher.cs" />
     <Compile Include="Support\IJob.cs" />
     <Compile Include="Support\JobsHelper.cs" />
     <Compile Include="Metadata\DisplayDataAttribute.cs" />

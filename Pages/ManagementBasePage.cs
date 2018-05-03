@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Threading.Tasks;
 using Hangfire.Common;
@@ -10,6 +11,7 @@ using Hangfire.Dashboard;
 using Hangfire.Dashboard.Pages;
 using Hangfire.Server;
 using Hangfire.States;
+using Newtonsoft.Json;
 
 namespace Hangfire.Core.Dashboard.Management.Pages
 {
@@ -100,19 +102,25 @@ namespace Hangfire.Core.Dashboard.Management.Pages
             {
                 var route = $"{ManagementPage.UrlRoute}/{queue}/{jobMetadata.DisplayName.Replace(" ", string.Empty)}";
 
-                DashboardRoutes.Routes.AddCommand(route, context =>
+                DashboardRoutes.Routes.Add(route, new CommandWithResponseDispatcher(context =>
                 {
                     var par = new List<object>();
-                    var schedule = Task.Run(() => context.Request.GetFormValuesAsync($"{jobMetadata.DisplayName.Replace(" ", string.Empty)}_schedule")).Result.FirstOrDefault();
-                    var cron = Task.Run(() => context.Request.GetFormValuesAsync($"{jobMetadata.DisplayName.Replace(" ", string.Empty)}_cron")).Result.FirstOrDefault();
+                    var schedule = Task
+                        .Run(() => context.Request.GetFormValuesAsync(
+                            $"{jobMetadata.DisplayName.Replace(" ", string.Empty)}_schedule")).Result.FirstOrDefault();
+                    var cron = Task
+                        .Run(() => context.Request.GetFormValuesAsync(
+                            $"{jobMetadata.DisplayName.Replace(" ", string.Empty)}_cron")).Result.FirstOrDefault();
 
                     foreach (var parameterInfo in jobMetadata.MethodInfo.GetParameters())
                     {
-                        if (parameterInfo.ParameterType == typeof(PerformContext) || parameterInfo.ParameterType == typeof(IJobCancellationToken))
+                        if (parameterInfo.ParameterType == typeof(PerformContext) ||
+                            parameterInfo.ParameterType == typeof(IJobCancellationToken))
                         {
                             par.Add(null);
                             continue;
-                        };
+                        }
+                        ;
 
                         var variable = $"{jobMetadata.DisplayName.Replace(" ", string.Empty)}_{parameterInfo.Name}";
                         if (parameterInfo.ParameterType == typeof(DateTime))
@@ -152,11 +160,12 @@ namespace Hangfire.Core.Dashboard.Management.Pages
                     var job = new Job(jobMetadata.Type, jobMetadata.MethodInfo, par.ToArray());
 
                     var client = new BackgroundJobClient(context.Storage);
-
+                    string jobLink = null;
                     if (!string.IsNullOrEmpty(schedule))
                     {
                         var minutes = int.Parse(schedule);
-                        return client.Create(job, new ScheduledState(new TimeSpan(0, 0, minutes, 0))) != string.Empty;
+                        var jobId = client.Create(job, new ScheduledState(new TimeSpan(0, 0, minutes, 0)));
+                        jobLink = new UrlHelper(context).JobDetails(jobId);
                     }
                     else if (!string.IsNullOrEmpty(cron))
                     {
@@ -164,17 +173,27 @@ namespace Hangfire.Core.Dashboard.Management.Pages
                         try
                         {
                             manager.AddOrUpdate(jobMetadata.DisplayName, job, cron, TimeZoneInfo.Utc, queue);
+                            jobLink = new UrlHelper(context).To("/recurring");
                         }
                         catch (Exception)
                         {
                             return false;
                         }
+                    }
+                    else
+                    {
+                        var jobId = client.Create(job, new EnqueuedState(jobMetadata.Queue));
+                        jobLink = new UrlHelper(context).JobDetails(jobId);
+                    }
+                    if (!string.IsNullOrEmpty(jobLink))
+                    {
+                        var responseObj = new { jobLink };
+                        context.Response.WriteAsync(JsonConvert.SerializeObject(responseObj));
+                        context.Response.StatusCode = (int) HttpStatusCode.OK;
                         return true;
                     }
-
-                    var jobId = client.Create(job, new EnqueuedState(jobMetadata.Queue));
-                    return jobId != string.Empty;
-                });
+                    return false;
+                }));
             }
         }
 
@@ -218,7 +237,7 @@ namespace Hangfire.Core.Dashboard.Management.Pages
                               ");
             }
 
-            WriteLiteral($@"<div id=""{id}_error"" ></div>  
+            WriteLiteral($@"<div id=""{id}_error"" ></div>  <div id=""{id}_success"" ></div>  
                             </div>
                             <div class=""panel-footer clearfix "">
                                 <div class=""pull-right"">
