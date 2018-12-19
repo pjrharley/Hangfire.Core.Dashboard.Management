@@ -188,8 +188,8 @@ namespace Hangfire.Core.Dashboard.Management.Pages
                     if (!string.IsNullOrEmpty(jobLink))
                     {
                         var responseObj = new { jobLink };
-                        context.Response.WriteAsync(JsonConvert.SerializeObject(responseObj));
                         context.Response.StatusCode = (int) HttpStatusCode.OK;
+                        context.Response.WriteAsync(JsonConvert.SerializeObject(responseObj));
                         return true;
                     }
                     return false;
