@@ -20,18 +20,20 @@ namespace Hangfire.Core.Dashboard.Management.Support
             foreach (Type ti in  assembly.GetTypes().Where(x => !x.IsInterface && typeof(IJob).IsAssignableFrom(x) && x.Name != (typeof(IJob).Name)))
             {
                 var q="default";
+                var title = "Default";
 
                 if (ti.GetCustomAttributes(true).OfType<ManagementPageAttribute>().Any())
                 {
                     var attr = ti.GetCustomAttribute<ManagementPageAttribute>();
                     q =  attr.Queue;
+                    title = attr.Title;
                     Pages.Add(attr);
                 }
                 
 
                 foreach (var methodInfo in ti.GetMethods().Where(m => m.DeclaringType == ti))
                 {
-                    var meta = new JobMetadata { Type = ti, Queue = q};
+                    var meta = new JobMetadata { Type = ti, Queue = q, PageTitle = title};
 
                     if (methodInfo.GetCustomAttributes(true).OfType<DescriptionAttribute>().Any())
                     {

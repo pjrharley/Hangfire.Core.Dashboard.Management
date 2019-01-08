@@ -30,7 +30,7 @@ namespace Hangfire.Core.Dashboard.Management.Pages
 
         protected virtual void Content()
         {
-            var jobs = JobsHelper.Metadata.Where(j => j.Queue.Contains(queue));
+            var jobs = JobsHelper.Metadata.Where(j => j.PageTitle.Contains(pageTitle));
 
             foreach (var jobMetadata in jobs)
             {
