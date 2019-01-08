@@ -27,7 +27,7 @@ namespace Hangfire.Core.Dashboard.Management.Support
                     var attr = ti.GetCustomAttribute<ManagementPageAttribute>();
                     q =  attr.Queue;
                     title = attr.Title;
-                    Pages.Add(attr);
+                    if(!Pages.Any(x => x.Title == title)) Pages.Add(attr);
                 }
                 
 
