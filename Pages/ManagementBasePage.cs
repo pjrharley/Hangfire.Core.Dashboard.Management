@@ -34,8 +34,8 @@ namespace Hangfire.Core.Dashboard.Management.Pages
 
             foreach (var jobMetadata in jobs)
             {
-                var route = $"{ManagementPage.UrlRoute}/{queue}/{jobMetadata.DisplayName.Replace(" ", string.Empty)}";
-                var id = $"{jobMetadata.DisplayName.Replace(" ", string.Empty)}";
+                var route = $"{ManagementPage.UrlRoute}/{queue}/{jobMetadata.DisplayName?.Replace(" ", string.Empty) ?? jobMetadata.Type.Name}";
+                var id = $"{jobMetadata.DisplayName?.Replace(" ", string.Empty) ?? jobMetadata.Type.Name}";
 
                 if (jobMetadata.MethodInfo.GetParameters().Length > 1)
                 {
@@ -73,7 +73,8 @@ namespace Hangfire.Core.Dashboard.Management.Pages
                         }
                         else
                         {
-                            throw new NotImplementedException();
+                            Logging.LogProvider.GetCurrentClassLogger().Log(Logging.LogLevel.Warn, () => "Parameter-type is not supported.");
+                            //throw new NotImplementedException();
                         }
                     }
 
@@ -100,17 +101,19 @@ namespace Hangfire.Core.Dashboard.Management.Pages
 
             foreach (var jobMetadata in jobs)
             {
-                var route = $"{ManagementPage.UrlRoute}/{queue}/{jobMetadata.DisplayName.Replace(" ", string.Empty)}";
+                var route = $"{ManagementPage.UrlRoute}/{queue}/{jobMetadata.DisplayName?.Replace(" ", string.Empty) ?? jobMetadata.Type.Name}";
 
                 DashboardRoutes.Routes.Add(route, new CommandWithResponseDispatcher(context =>
                 {
                     var par = new List<object>();
+
                     var schedule = Task
                         .Run(() => context.Request.GetFormValuesAsync(
                             $"{jobMetadata.DisplayName.Replace(" ", string.Empty)}_schedule")).Result.FirstOrDefault();
                     var cron = Task
                         .Run(() => context.Request.GetFormValuesAsync(
                             $"{jobMetadata.DisplayName.Replace(" ", string.Empty)}_cron")).Result.FirstOrDefault();
+
 
                     foreach (var parameterInfo in jobMetadata.MethodInfo.GetParameters())
                     {
@@ -129,6 +132,7 @@ namespace Hangfire.Core.Dashboard.Management.Pages
                         }
 
                         var t = Task.Run(() => context.Request.GetFormValuesAsync(variable)).Result;
+
 
                         object item = null;
                         var formInput = t.FirstOrDefault();
@@ -150,7 +154,8 @@ namespace Hangfire.Core.Dashboard.Management.Pages
                         }
                         else
                         {
-                            throw new NotImplementedException();
+                            Logging.LogProvider.GetCurrentClassLogger().Log(Logging.LogLevel.Warn, () => "Parameter-type is not supported.");
+                            //throw new NotImplementedException();
                         }
 
                         par.Add(item);

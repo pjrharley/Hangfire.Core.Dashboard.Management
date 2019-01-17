@@ -34,7 +34,7 @@ namespace Hangfire.Core.Dashboard.Management.Support
                 foreach (var methodInfo in ti.GetMethods().Where(m => m.DeclaringType == ti))
                 {
                     var meta = new JobMetadata { Type = ti, Queue = q, PageTitle = title};
-
+                    meta.MethodInfo = methodInfo;
                     if (methodInfo.GetCustomAttributes(true).OfType<DescriptionAttribute>().Any())
                     {
                         meta.Description = methodInfo.GetCustomAttribute<DescriptionAttribute>().Description;
@@ -42,7 +42,7 @@ namespace Hangfire.Core.Dashboard.Management.Support
 
                     if (methodInfo.GetCustomAttributes(true).OfType<DisplayNameAttribute>().Any())
                     {
-                        meta.MethodInfo = methodInfo;
+                        
                         meta.DisplayName = methodInfo.GetCustomAttribute<DisplayNameAttribute>().DisplayName;
                     }
 
