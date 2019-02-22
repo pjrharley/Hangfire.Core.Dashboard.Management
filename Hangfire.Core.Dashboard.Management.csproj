@@ -4,7 +4,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{56858540-6404-4F8F-ABFA-9C6043FBD551}</ProjectGuid>
+    <ProjectGuid>{488B40E8-402F-4901-A40C-2D8A1A2D03B6}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Hangfire.Core.Dashboard.Management</RootNamespace>
@@ -31,10 +31,6 @@
     <DocumentationFile>bin\Release\Hangfire.Core.Dashboard.Management.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Hangfire.Core, Version=1.6.8.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Hangfire.Core.1.6.8\lib\net45\Hangfire.Core.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
@@ -78,6 +74,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="management.PNG" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Hangfire\src\Hangfire.Core\Hangfire.Core.csproj">
+      <Project>{c995ea9e-56ee-4951-8260-d94260a7f4c2}</Project>
+      <Name>Hangfire.Core</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
