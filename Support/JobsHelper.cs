@@ -27,9 +27,9 @@ namespace Hangfire.Core.Dashboard.Management.Support
                     q =  attr.Queue;
                     Pages.Add(attr);
                 }
-                
 
-                foreach (var methodInfo in ti.GetMethods().Where(m => m.DeclaringType == ti))
+
+                foreach (var methodInfo in ti.GetMethods().Where(m => ! m.IsSpecialName && m.DeclaringType == ti))
                 {
                     var meta = new JobMetadata { Type = ti, Queue = q};
 
