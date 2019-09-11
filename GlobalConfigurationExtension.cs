@@ -17,19 +17,30 @@ namespace Hangfire.Core.Dashboard.Management
             JobsHelper.GetAllJobs(assembly);
             CreateManagement();
         }
+        public static void UseManagementPages(this IGlobalConfiguration config, Assembly[] assemblies) {
+            foreach (var assembly in assemblies) {
+                JobsHelper.GetAllJobs(assembly);
+            }
+            CreateManagement();
+        }
 
         private static void CreateManagement()
         {
+            var pageSet = new Dictionary<string, string>();
             foreach (var pageInfo in JobsHelper.Pages)
             {
                 ManagementBasePage.AddCommands(pageInfo.Queue);
-
-                ManagementSidebarMenu.Items.Add(p => new MenuItem(pageInfo.MenuName, p.Url.To($"{ManagementPage.UrlRoute}/{pageInfo.Queue}"))
+                if (!pageSet.ContainsKey(pageInfo.Queue))
                 {
-                    Active = p.RequestPath.StartsWith($"{ManagementPage.UrlRoute}/{pageInfo.Queue}")
-                });
+                    pageSet.Add(pageInfo.Queue, pageInfo.Queue);   
+                    ManagementSidebarMenu.Items.Add(p => new MenuItem(pageInfo.Queue, p.Url.To($"{ManagementPage.UrlRoute}/{pageInfo.Queue}"))
+                    {
+                        Active = p.RequestPath.StartsWith($"{ManagementPage.UrlRoute}/{pageInfo.Queue}")
+                    });
+                }
+                
 
-                DashboardRoutes.Routes.AddRazorPage($"{ManagementPage.UrlRoute}/{pageInfo.Queue}", x => new ManagementBasePage(pageInfo.Title, pageInfo.Title, pageInfo.Queue));
+                DashboardRoutes.Routes.AddRazorPage($"{ManagementPage.UrlRoute}/{pageInfo.Queue}", x => new ManagementBasePage(pageInfo.Queue));
             }
             
             //note: have to use new here as the pages are dispatched and created each time. If we use an instance, the page gets duplicated on each call
@@ -37,7 +48,9 @@ namespace Hangfire.Core.Dashboard.Management
             
             // can't use the method of Hangfire.Console as it's usage overrides any similar usage here. Thus
             // we have to add our own endpoint to load it and call it from our code. Actually is a lot less work
-            DashboardRoutes.Routes.Add("/jsm", new EmbeddedResourceDispatcher(Assembly.GetExecutingAssembly(), "Hangfire.Core.Dashboard.Management.Content.management.js"));
+            DashboardRoutes.Routes.Add("/jsm", 
+                new EmbeddedResourceDispatcher(Assembly.GetExecutingAssembly(), 
+                "Hangfire.Core.Dashboard.Management.Content.management.js","application/javascript"));
 
             NavigationMenu.Items.Add(page => new MenuItem(ManagementPage.Title, page.Url.To(ManagementPage.UrlRoute))
             {
