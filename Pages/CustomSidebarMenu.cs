@@ -34,12 +34,12 @@ namespace Hangfire.Core.Dashboard.Management.Pages
                 WriteLiteral("\">\r\n");
                 Write(itemValue.Text);
                 WriteLiteral("\r\n<span class=\"pull-right\">\r\n");
-
+/*
                 foreach (var metric in itemValue.GetAllMetrics())
                 {
                     Write(Html.InlineMetric(metric));
                 }
-
+*/
                 WriteLiteral("</span>\r\n</a>\r\n");
             }
             

@@ -20,11 +20,10 @@ namespace Hangfire.Core.Dashboard.Management.Pages
         private readonly string pageTitle;
         private readonly string pageHeader;
         private readonly string queue;
-        
-        protected internal ManagementBasePage(string pageTitle, string pageHeader, string queue)
+
+
+        protected internal ManagementBasePage( string queue)
         {
-            this.pageTitle = pageTitle;
-            this.pageHeader = pageHeader;
             this.queue = queue;
         }
 
@@ -34,12 +33,11 @@ namespace Hangfire.Core.Dashboard.Management.Pages
 
             foreach (var jobMetadata in jobs)
             {
-                var route = $"{ManagementPage.UrlRoute}/{queue}/{jobMetadata.DisplayName.Replace(" ", string.Empty)}";
-                var id = $"{jobMetadata.DisplayName.Replace(" ", string.Empty)}";
+                var route = $"{ManagementPage.UrlRoute}/{queue}/{jobMetadata.DisplayName?.Replace(" ", string.Empty) ?? jobMetadata.MethodName}";
+                var id = $"{jobMetadata.DisplayName?.Replace(" ", string.Empty) ?? jobMetadata.MethodName}";
 
-                if (jobMetadata.MethodInfo.GetParameters().Length > 1)
-                {
-
+                //if (jobMetadata.MethodInfo.GetParameters().Length > 1)
+                //{
                     string inputs = string.Empty;
 
                     foreach (var parameterInfo in jobMetadata.MethodInfo.GetParameters())
@@ -71,27 +69,27 @@ namespace Hangfire.Core.Dashboard.Management.Pages
                         {
                             inputs += "<br/>" + InputCheckbox(myId, displayInfo?.LabelText ?? parameterInfo.Name, displayInfo?.PlaceholderText ?? parameterInfo.Name);
                         }
-                        else
-                        {
-                            throw new NotImplementedException();
+                        else {
+                            // Take a raw Json string 
+                            inputs += InputTextbox(myId, displayInfo?.LabelText??parameterInfo.Name, displayInfo?.PlaceholderText??parameterInfo.Name);
+                            // Logging.LogProvider.GetCurrentClassLogger().Log(Logging.LogLevel.Warn, () => "Parameter-type is not supported.");
+                            //inputs += InputTextbox(myId, displayInfo?.LabelText??parameterInfo.Name, displayInfo?.PlaceholderText??parameterInfo.Name);
                         }
                     }
 
-                    Panel(id, jobMetadata.DisplayName, jobMetadata.Description, inputs, CreateButtons(route, "Enqueue", "enqueueing", id));
+                    Panel(id, jobMetadata.DisplayName ?? jobMetadata.MethodName + "." + jobMetadata.MethodInfo.Name, jobMetadata.Description, inputs, CreateButtons(route, "Enqueue", "enqueueing", id));
 
-                }
-                else
-                {
-                    Panel(id, jobMetadata.DisplayName, jobMetadata.Description, string.Empty, CreateButtons(route, "Enqueue", "enqueueing", id));
-
-                }
+                //}
+                //else
+                //{
+                 //   Panel(id, jobMetadata.DisplayName, jobMetadata.Description, string.Empty, CreateButtons(route, "Enqueue", "enqueueing", id));
+//                }
 
             }
 
             WriteLiteral("\r\n<script src=\"");
             Write(Url.To($"/jsm"));
             WriteLiteral("\"></script>\r\n");
-
         }
 
         public static void AddCommands(string queue)
@@ -100,17 +98,18 @@ namespace Hangfire.Core.Dashboard.Management.Pages
 
             foreach (var jobMetadata in jobs)
             {
-                var route = $"{ManagementPage.UrlRoute}/{queue}/{jobMetadata.DisplayName.Replace(" ", string.Empty)}";
+                
+                var route = $"{ManagementPage.UrlRoute}/{queue}/{jobMetadata.DisplayName?.Replace(" ", string.Empty) ?? jobMetadata.MethodName}";
 
                 DashboardRoutes.Routes.Add(route, new CommandWithResponseDispatcher(context =>
                 {
                     var par = new List<object>();
                     var schedule = Task
                         .Run(() => context.Request.GetFormValuesAsync(
-                            $"{jobMetadata.DisplayName.Replace(" ", string.Empty)}_schedule")).Result.FirstOrDefault();
+                            $"{jobMetadata.DisplayName?.Replace(" ", string.Empty)?? jobMetadata.MethodName}_schedule")).Result.FirstOrDefault();
                     var cron = Task
                         .Run(() => context.Request.GetFormValuesAsync(
-                            $"{jobMetadata.DisplayName.Replace(" ", string.Empty)}_cron")).Result.FirstOrDefault();
+                            $"{jobMetadata.DisplayName?.Replace(" ", string.Empty)?? jobMetadata.MethodName}_cron")).Result.FirstOrDefault();
 
                     foreach (var parameterInfo in jobMetadata.MethodInfo.GetParameters())
                     {
@@ -122,12 +121,13 @@ namespace Hangfire.Core.Dashboard.Management.Pages
                         }
                         ;
 
-                        var variable = $"{jobMetadata.DisplayName.Replace(" ", string.Empty)}_{parameterInfo.Name}";
+                        var variable = $"{jobMetadata.DisplayName?.Replace(" ", string.Empty)?? jobMetadata.MethodName}_{parameterInfo.Name}";
                         if (parameterInfo.ParameterType == typeof(DateTime))
                         {
                             variable = $"{variable}_datetimepicker";
                         }
 
+                        variable = variable.Trim('_');
                         var t = Task.Run(() => context.Request.GetFormValuesAsync(variable)).Result;
 
                         object item = null;
@@ -148,9 +148,17 @@ namespace Hangfire.Core.Dashboard.Management.Pages
                         {
                             item = formInput == "on";
                         }
-                        else
+                        else if (!parameterInfo.ParameterType.IsValueType) {
+                            if (formInput == null || formInput.Length == 0) {
+                                item = null;
+                            }
+                            else {
+                                item = JsonConvert.DeserializeObject(formInput, parameterInfo.ParameterType);
+                            }
+                        } else
                         {
-                            throw new NotImplementedException();
+                            item = formInput;
+                            //Logging.LogProvider.GetCurrentClassLogger().Log(Logging.LogLevel.Warn, () => "Parameter-type is not supported.");
                         }
 
                         par.Add(item);
@@ -172,7 +180,7 @@ namespace Hangfire.Core.Dashboard.Management.Pages
                         var manager = new RecurringJobManager(context.Storage);
                         try
                         {
-                            manager.AddOrUpdate(jobMetadata.DisplayName, job, cron, TimeZoneInfo.Utc, queue);
+                            manager.AddOrUpdate(jobMetadata.DisplayName?? jobMetadata.MethodName, job, cron, TimeZoneInfo.Utc, queue);
                             jobLink = new UrlHelper(context).To("/recurring");
                         }
                         catch (Exception)
