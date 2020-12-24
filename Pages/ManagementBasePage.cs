@@ -59,6 +59,10 @@ namespace Hangfire.Core.Dashboard.Management.Pages
                         {
                             inputs += InputTextbox(myId, displayInfo?.LabelText??parameterInfo.Name, displayInfo?.PlaceholderText??parameterInfo.Name);
                         }
+                        else if (parameterInfo.ParameterType == typeof(System.Guid))
+                        {
+                            inputs += InputTextbox(myId, displayInfo?.LabelText ?? parameterInfo.Name, displayInfo?.PlaceholderText ?? parameterInfo.Name);
+                        }
                         else if (parameterInfo.ParameterType == typeof(int))
                         {
                             inputs += InputNumberbox(myId, displayInfo?.LabelText ?? parameterInfo.Name, displayInfo?.PlaceholderText ?? parameterInfo.Name);
